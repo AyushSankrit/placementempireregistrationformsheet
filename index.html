@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Placement Empire Registration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#0f172a;
+  padding:20px;
+}
+.container{
+  max-width:480px;
+  background:#fff;
+  margin:auto;
+  padding:20px;
+  border-radius:10px;
+}
+h2{text-align:center}
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  font-size:16px;
+}
+button{
+  background:#0f172a;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>Placement Empire Registration</h2>
+
+<input id="name" placeholder="Full Name">
+<input id="mobile" placeholder="Mobile Number">
+<input id="email" placeholder="Email Address">
+
+<select id="category" onchange="setCategory()">
+  <option value="">Select Category</option>
+  <option value="Tech Jobs|1500">Tech Jobs @ ₹1500</option>
+  <option value="Skilled Jobs|1000">Skilled Jobs @ ₹1000</option>
+  <option value="Unskilled Jobs|500">Unskilled Jobs @ ₹500</option>
+</select>
+
+<button onclick="payUPI()">Pay via UPI</button>
+
+<input id="utr" placeholder="UTR (Optional)">
+
+<button onclick="generateTicket()">Generate Ticket</button>
+</div>
+
+<script>
+const CONFIG = {
+  UPI_ID: "7079887439-4@ybl",
+  PAYEE: "Placement Empire",
+  SHEET_URL: "https://script.google.com/macros/s/AKfycbyBUrA4SMt2XNnCDO-6PdQq-U7pRcJOCARQEE3O4oegJ6Cjq8S7sIVGg_VYYqpILfJobw/exec"
+};
+
+let category="", amount="";
+
+function setCategory(){
+  const val = document.getElementById("category").value;
+  if(!val){ category=""; amount=""; return; }
+  [category,amount] = val.split("|");
+}
+
+function payUPI(){
+  if(!amount){
+    alert("Please select category first");
+    return;
+  }
+  location.href = `upi://pay?pa=${CONFIG.UPI_ID}&pn=${CONFIG.PAYEE}&am=${amount}&cu=INR`;
+}
+
+function generateTicket(){
+
+  const name   = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const email  = document.getElementById("email").value.trim();
+  const utr    = document.getElementById("utr").value.trim();
+
+  if(!name || !mobile || !email || !category){
+    alert("Please fill all required details");
+    return;
+  }
+
+  // ✅ OPEN WINDOW IMMEDIATELY (ANDROID SAFE)
+  const pdfWindow = window.open("", "_blank");
+
+  const ticketId = "PE-" + Date.now();
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+
+  pdf.setFontSize(16);
+  pdf.text("Placement Empire Registration Ticket",20,20);
+
+  pdf.setFontSize(12);
+  pdf.text(`Ticket ID: ${ticketId}`,20,40);
+  pdf.text(`Name: ${name}`,20,50);
+  pdf.text(`Mobile: ${mobile}`,20,60);
+  pdf.text(`Email: ${email}`,20,70);
+  pdf.text(`Category: ${category}`,20,80);
+  pdf.text(`Amount: ₹${amount}`,20,90);
+  if(utr) pdf.text(`UTR: ${utr}`,20,100);
+
+  const qrDiv = document.createElement("div");
+  new QRCode(qrDiv,{ text: ticketId, width:100, height:100 });
+
+  setTimeout(()=>{
+    const img = qrDiv.querySelector("img");
+    if(img){
+      pdf.addImage(img.src,"PNG",140,40,40,40);
+    }
+
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+
+    // ✅ LOAD PDF INTO ALREADY OPENED WINDOW
+    pdfWindow.location.href = url;
+
+    // ✅ SUCCESS MESSAGE (AFTER OPEN)
+    alert("✅ Registration Successful!\nYour ticket has been generated.");
+
+  },300);
+
+  // Save to Google Sheet
+  fetch(CONFIG.SHEET_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      ticketId,name,mobile,email,category,amount,utr
+    })
+  });
+}
+</script>
+
+</body>
+</html>
