@@ -125,8 +125,7 @@
     <p class="brand">Powered by Placement Empire</p>
 
     <p class="notice">
-      Payment is manually reviewed. A generated ticket is not proof of payment until the UTR is verified.
-    </p>
+      Payment is manually reviewed.
 
     <form id="regForm" novalidate>
       <label for="name">Full Name</label>
@@ -167,7 +166,7 @@
       <label for="category">Registration Category</label>
       <select id="category" name="category" required>
         <option value="">Select Category</option>
-        <option value="tech-jobs">Tech Jobs @ ₹1500</option>
+        <option value="office-jobs">Office Jobs @ ₹1500</option>
         <option value="skilled-jobs">Skilled Jobs @ ₹1000</option>
         <option value="unskilled-jobs">Unskilled Jobs @ ₹500</option>
         <option value="btech-jobs">B.Tech Jobs @ ₹5000</option>
@@ -218,7 +217,7 @@
     // This map improves consistency in the browser, but it is not a security boundary.
     // The server must independently calculate the amount from the category.
     const CATEGORIES = Object.freeze({
-      'tech-jobs': { name: 'Tech Jobs', amount: 1500 },
+      'office-jobs': { name: 'Office Jobs', amount: 1500 },
       'skilled-jobs': { name: 'Skilled Jobs', amount: 1000 },
       'unskilled-jobs': { name: 'Unskilled Jobs', amount: 500 },
       'btech-jobs': { name: 'B.Tech Jobs', amount: 5000 },
