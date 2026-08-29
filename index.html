@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Placement Empire Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      padding: 20px;
+    }
+    .container {
+      max-width: 520px;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #0f172a;
+    }
+    p.brand {
+      text-align: center;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+    label { font-weight: bold; }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 15px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Placement Empire Registration</h2>
+  <p class="brand">Powered by Placement Empire</p>
+
+  <form id="regForm">
+    <label>Full Name</label>
+    <input type="text" id="name" required />
+
+    <label>Mobile Number</label>
+    <input type="tel" id="mobile" required />
+
+    <label>Email Address</label>
+    <input type="email" id="email" required />
+
+    <label>Registration Category</label>
+    <select id="category" required onchange="enablePayButton()">
+      <option value="">Select Category</option>
+      <option value="Tech Jobs|1500">Tech Jobs @ ₹1500</option>
+      <option value="Skilled Jobs|1000">Skilled Jobs @ ₹1000</option>
+      <option value="Unskilled Jobs|500">Unskilled Jobs @ ₹500</option>
+      <option value="B.tech Jobs|5000">Tech Jobs @ ₹5000</option>
+      <option value="Diploma Jobs|3000">Skilled Jobs @ ₹3000</option>
+      <option value="ITI Jobs|2000">Unskilled Jobs @ ₹2000</option>
+      <option value="Interview Training|250">Unskilled Jobs @ ₹250</option>
+      
+    </select>
+
+    <button type="button" id="payBtn" disabled onclick="redirectToUPI()">Pay via UPI</button>
+
+    <label>UPI UTR / Reference Number</label>
+    <input type="text" id="utr" placeholder="Enter UTR after payment" required />
+
+    <button type="button" onclick="generateTicket()">Submit & Generate Ticket</button>
+  </form>
+</div>
+
+<script>
+/* =====================
+   CONFIGURATION
+   ===================== */
+const CONFIG = {
+  COMPANY_NAME: "Placement Empire",
+  PROJECT_NAME: "Placement Empire Registration",
+  CONTACT_PHONE: "7079887439",
+  CONTACT_EMAIL: "info@placementempire.com",
+  UPI_ID: "tmps5482719104160405@slc",
+  PAYEE_NAME: "Placement Empire",
+  SHEET_WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxWeTlMXXelwLeaBFjQJUwrO-dHY6MzjzZy6tvbcLYvIF9sogeqgoE1k9rPbgkQpEU10g/exec"
+};
+
+let selectedAmount = 0;
+let selectedCategory = "";
+
+function enablePayButton() {
+  const value = document.getElementById('category').value;
+  const payBtn = document.getElementById('payBtn');
+
+  if (value) {
+    [selectedCategory, selectedAmount] = value.split('|');
+    payBtn.disabled = false;
+    payBtn.innerText = `Pay ₹${selectedAmount} via UPI`;
+  } else {
+    payBtn.disabled = true;
+    payBtn.innerText = 'Pay via UPI';
+  }
+}
+
+function redirectToUPI() {
+  const upiUrl = `upi://pay?pa=${CONFIG.UPI_ID}&pn=${encodeURIComponent(CONFIG.PAYEE_NAME)}&am=${selectedAmount}&cu=INR&tn=${encodeURIComponent(CONFIG.PROJECT_NAME)}`;
+  window.location.href = upiUrl;
+}
+
+function generateTicket() {
+  const name = document.getElementById('name').value;
+  const mobile = document.getElementById('mobile').value;
+  const email = document.getElementById('email').value;
+  const utr = document.getElementById('utr').value.trim();
+
+  if (!name || !mobile || !email || !selectedCategory || !utr) {
+    alert('Please complete all steps including payment and UTR number');
+    return;
+  }
+
+  const ticketId = 'PE-' + Date.now();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text('Placement Empire – Registration Ticket', 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Ticket ID: ${ticketId}`, 20, 40);
+  doc.text(`Name: ${name}`, 20, 50);
+  doc.text(`Mobile: ${mobile}`, 20, 60);
+  doc.text(`Email: ${email}`, 20, 70);
+  doc.text(`Category: ${selectedCategory}`, 20, 80);
+  doc.text(`Amount Paid: ₹${selectedAmount}`, 20, 90);
+  doc.text(`UTR Number: ${utr}`, 20, 100);
+
+  const qrData = `Ticket:${ticketId}|UTR:${utr}`;
+  const qr = document.createElement('div');
+  new QRCode(qr, { text: qrData, width: 100, height: 100 });
+
+  setTimeout(() => {
+    const img = qr.querySelector('img');
+    doc.addImage(img.src, 'PNG', 140, 40, 40, 40);
+
+    doc.text(CONFIG.COMPANY_NAME, 20, 125);
+    doc.text(`Contact: ${CONFIG.CONTACT_PHONE}`, 20, 135);
+    doc.text(`Email: ${CONFIG.CONTACT_EMAIL}`, 20, 145);
+
+    doc.save(`${ticketId}.pdf`);
+  }, 500);
+
+  fetch(CONFIG.SHEET_WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({ ticketId, name, mobile, email, category: selectedCategory, amount: selectedAmount, utr })
+  });
+}
+</script>
+
+</body>
+</html>
