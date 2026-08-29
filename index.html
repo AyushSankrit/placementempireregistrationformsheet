@@ -2,187 +2,459 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Placement Empire Registration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Placement Empire registration form" />
+  <title>Placement Empire Registration</title>
 
-  <!-- jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- QR Code -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Third-party libraries. Pin versions and use a trusted delivery source in production. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
   <style>
-    body {
+    :root {
+      color-scheme: light;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      padding: 20px;
-    }
-    .container {
-      max-width: 520px;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      margin: auto;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
+      background: #0f172a;
       color: #0f172a;
     }
-    p.brand {
-      text-align: center;
-      font-size: 14px;
-      color: #475569;
-      margin-bottom: 20px;
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
     }
-    label { font-weight: bold; }
-    input, select {
+
+    .container {
+      width: min(100%, 520px);
+      padding: 25px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      color: #0f172a;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    .brand {
+      margin: 0 0 20px;
+      color: #475569;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+
+    .notice {
+      margin: 0 0 20px;
+      padding: 12px;
+      border-radius: 6px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input, select, button {
       width: 100%;
+      font: inherit;
+    }
+
+    input, select {
+      margin: 8px 0 4px;
       padding: 10px;
-      margin: 8px 0 15px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
+      background: #fff;
     }
+
+    input:focus, select:focus, button:focus-visible {
+      outline: 3px solid rgba(59, 130, 246, 0.35);
+      outline-offset: 2px;
+    }
+
+    .hint {
+      display: block;
+      min-height: 1.2em;
+      margin-bottom: 8px;
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+
     button {
-      width: 100%;
+      margin-top: 16px;
       padding: 12px;
+      border: 0;
+      border-radius: 6px;
       background: #0f172a;
       color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
+      font-size: 1rem;
       cursor: pointer;
     }
-    button:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
+
+    button.secondary { background: #1d4ed8; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    #status {
+      min-height: 1.4em;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      line-height: 1.4;
     }
+
+    #status.success { color: #166534; }
+    #status.error { color: #b91c1c; }
+    #status.info { color: #1d4ed8; }
   </style>
 </head>
 <body>
+  <main class="container">
+    <h1>Placement Empire Registration</h1>
+    <p class="brand">Powered by Placement Empire</p>
 
-<div class="container">
-  <h2>Placement Empire Registration</h2>
-  <p class="brand">Powered by Placement Empire</p>
+    <p class="notice">
+      Payment is manually reviewed. A generated ticket is not proof of payment until the UTR is verified.
+    </p>
 
-  <form id="regForm">
-    <label>Full Name</label>
-    <input type="text" id="name" required />
+    <form id="regForm" novalidate>
+      <label for="name">Full Name</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        required
+        minlength="2"
+        maxlength="100"
+        autocomplete="name"
+      />
+      <small class="hint">Enter your name as it should appear on the registration ticket.</small>
 
-    <label>Mobile Number</label>
-    <input type="tel" id="mobile" required />
+      <label for="mobile">Mobile Number</label>
+      <input
+        type="tel"
+        id="mobile"
+        name="mobile"
+        required
+        pattern="[6-9][0-9]{9}"
+        maxlength="10"
+        inputmode="numeric"
+        autocomplete="tel"
+      />
+      <small class="hint">Enter a valid 10-digit Indian mobile number.</small>
 
-    <label>Email Address</label>
-    <input type="email" id="email" required />
+      <label for="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        required
+        maxlength="254"
+        autocomplete="email"
+      />
 
-    <label>Registration Category</label>
-    <select id="category" required onchange="enablePayButton()">
-      <option value="">Select Category</option>
-      <option value="Tech Jobs|1500">Tech Jobs @ ₹1500</option>
-      <option value="Skilled Jobs|1000">Skilled Jobs @ ₹1000</option>
-      <option value="Unskilled Jobs|500">Unskilled Jobs @ ₹500</option>
-      <option value="B.tech Jobs|5000">Tech Jobs @ ₹5000</option>
-      <option value="Diploma Jobs|3000">Skilled Jobs @ ₹3000</option>
-      <option value="ITI Jobs|2000">Unskilled Jobs @ ₹2000</option>
-      <option value="Interview Training|250">Unskilled Jobs @ ₹250</option>
-      
-    </select>
+      <label for="category">Registration Category</label>
+      <select id="category" name="category" required>
+        <option value="">Select Category</option>
+        <option value="tech-jobs">Tech Jobs @ ₹1500</option>
+        <option value="skilled-jobs">Skilled Jobs @ ₹1000</option>
+        <option value="unskilled-jobs">Unskilled Jobs @ ₹500</option>
+        <option value="btech-jobs">B.Tech Jobs @ ₹5000</option>
+        <option value="diploma-jobs">Diploma Jobs @ ₹3000</option>
+        <option value="iti-jobs">ITI Jobs @ ₹2000</option>
+        <option value="interview-training">Interview Training @ ₹250</option>
+      </select>
 
-    <button type="button" id="payBtn" disabled onclick="redirectToUPI()">Pay via UPI</button>
+      <button type="button" id="payBtn" class="secondary" disabled>
+        Pay via UPI
+      </button>
 
-    <label>UPI UTR / Reference Number</label>
-    <input type="text" id="utr" placeholder="Enter UTR after payment" required />
+      <label for="utr">UPI UTR / Reference Number</label>
+      <input
+        type="text"
+        id="utr"
+        name="utr"
+        required
+        minlength="6"
+        maxlength="30"
+        pattern="[A-Za-z0-9-]+"
+        autocomplete="off"
+        placeholder="Enter UTR after payment"
+      />
+      <small class="hint">Use letters, numbers, and hyphens only. The UTR will be reviewed.</small>
 
-    <button type="button" onclick="generateTicket()">Submit & Generate Ticket</button>
-  </form>
-</div>
+      <button type="submit" id="submitBtn">
+        Submit &amp; Generate Ticket
+      </button>
 
-<script>
-/* =====================
-   CONFIGURATION
-   ===================== */
-const CONFIG = {
-  COMPANY_NAME: "Placement Empire",
-  PROJECT_NAME: "Placement Empire Registration",
-  CONTACT_PHONE: "7079887439",
-  CONTACT_EMAIL: "info@placementempire.com",
-  UPI_ID: "tmps5482719104160405@slc",
-  PAYEE_NAME: "Placement Empire",
-  SHEET_WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxWeTlMXXelwLeaBFjQJUwrO-dHY6MzjzZy6tvbcLYvIF9sogeqgoE1k9rPbgkQpEU10g/exec"
-};
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+  </main>
 
-let selectedAmount = 0;
-let selectedCategory = "";
+  <script>
+    'use strict';
 
-function enablePayButton() {
-  const value = document.getElementById('category').value;
-  const payBtn = document.getElementById('payBtn');
+    const CONFIG = Object.freeze({
+      COMPANY_NAME: 'Placement Empire',
+      PROJECT_NAME: 'Placement Empire Registration',
+      CONTACT_PHONE: '7079887439',
+      CONTACT_EMAIL: 'info@placementempire.com',
+      UPI_ID: 'tmps5482719104160405@slc',
+      PAYEE_NAME: 'Placement Empire',
+      SHEET_WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxWeTlMXXelwLeaBFjQJUwrO-dHY6MzjzZy6tvbcLYvIF9sogeqgoE1k9rPbgkQpEU10g/exec'
+    });
 
-  if (value) {
-    [selectedCategory, selectedAmount] = value.split('|');
-    payBtn.disabled = false;
-    payBtn.innerText = `Pay ₹${selectedAmount} via UPI`;
-  } else {
-    payBtn.disabled = true;
-    payBtn.innerText = 'Pay via UPI';
-  }
-}
+    // This map improves consistency in the browser, but it is not a security boundary.
+    // The server must independently calculate the amount from the category.
+    const CATEGORIES = Object.freeze({
+      'tech-jobs': { name: 'Tech Jobs', amount: 1500 },
+      'skilled-jobs': { name: 'Skilled Jobs', amount: 1000 },
+      'unskilled-jobs': { name: 'Unskilled Jobs', amount: 500 },
+      'btech-jobs': { name: 'B.Tech Jobs', amount: 5000 },
+      'diploma-jobs': { name: 'Diploma Jobs', amount: 3000 },
+      'iti-jobs': { name: 'ITI Jobs', amount: 2000 },
+      'interview-training': { name: 'Interview Training', amount: 250 }
+    });
 
-function redirectToUPI() {
-  const upiUrl = `upi://pay?pa=${CONFIG.UPI_ID}&pn=${encodeURIComponent(CONFIG.PAYEE_NAME)}&am=${selectedAmount}&cu=INR&tn=${encodeURIComponent(CONFIG.PROJECT_NAME)}`;
-  window.location.href = upiUrl;
-}
+    let selectedCategory = null;
+    let paymentInitiated = false;
 
-function generateTicket() {
-  const name = document.getElementById('name').value;
-  const mobile = document.getElementById('mobile').value;
-  const email = document.getElementById('email').value;
-  const utr = document.getElementById('utr').value.trim();
+    const form = document.getElementById('regForm');
+    const categorySelect = document.getElementById('category');
+    const payButton = document.getElementById('payBtn');
+    const submitButton = document.getElementById('submitBtn');
+    const statusElement = document.getElementById('status');
 
-  if (!name || !mobile || !email || !selectedCategory || !utr) {
-    alert('Please complete all steps including payment and UTR number');
-    return;
-  }
+    function setStatus(message, type = 'info') {
+      statusElement.textContent = message;
+      statusElement.className = type;
+    }
 
-  const ticketId = 'PE-' + Date.now();
+    function updateCategory() {
+      const categoryKey = categorySelect.value;
+      selectedCategory = CATEGORIES[categoryKey] || null;
+      paymentInitiated = false;
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+      if (!selectedCategory) {
+        payButton.disabled = true;
+        payButton.textContent = 'Pay via UPI';
+        return;
+      }
 
-  doc.setFontSize(18);
-  doc.text('Placement Empire – Registration Ticket', 20, 20);
+      payButton.disabled = false;
+      payButton.textContent = `Pay ₹${selectedCategory.amount} via UPI`;
+      setStatus('Select Pay via UPI, complete the payment, and then enter the UTR.', 'info');
+    }
 
-  doc.setFontSize(12);
-  doc.text(`Ticket ID: ${ticketId}`, 20, 40);
-  doc.text(`Name: ${name}`, 20, 50);
-  doc.text(`Mobile: ${mobile}`, 20, 60);
-  doc.text(`Email: ${email}`, 20, 70);
-  doc.text(`Category: ${selectedCategory}`, 20, 80);
-  doc.text(`Amount Paid: ₹${selectedAmount}`, 20, 90);
-  doc.text(`UTR Number: ${utr}`, 20, 100);
+    function redirectToUPI() {
+      if (!selectedCategory) {
+        setStatus('Please select a registration category first.', 'error');
+        return;
+      }
 
-  const qrData = `Ticket:${ticketId}|UTR:${utr}`;
-  const qr = document.createElement('div');
-  new QRCode(qr, { text: qrData, width: 100, height: 100 });
+      const params = new URLSearchParams({
+        pa: CONFIG.UPI_ID,
+        pn: CONFIG.PAYEE_NAME,
+        am: String(selectedCategory.amount),
+        cu: 'INR',
+        tn: CONFIG.PROJECT_NAME
+      });
 
-  setTimeout(() => {
-    const img = qr.querySelector('img');
-    doc.addImage(img.src, 'PNG', 140, 40, 40, 40);
+      paymentInitiated = true;
+      setStatus('Opening your UPI application. Return here after payment and enter the UTR.', 'info');
+      window.location.assign(`upi://pay?${params.toString()}`);
+    }
 
-    doc.text(CONFIG.COMPANY_NAME, 20, 125);
-    doc.text(`Contact: ${CONFIG.CONTACT_PHONE}`, 20, 135);
-    doc.text(`Email: ${CONFIG.CONTACT_EMAIL}`, 20, 145);
+    function getFormValues() {
+      return {
+        name: document.getElementById('name').value.trim(),
+        mobile: document.getElementById('mobile').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        utr: document.getElementById('utr').value.trim()
+      };
+    }
 
-    doc.save(`${ticketId}.pdf`);
-  }, 500);
+    function waitForQrCode(container) {
+      return new Promise((resolve, reject) => {
+        const deadline = Date.now() + 3000;
 
-  fetch(CONFIG.SHEET_WEB_APP_URL, {
-    method: 'POST',
-    body: JSON.stringify({ ticketId, name, mobile, email, category: selectedCategory, amount: selectedAmount, utr })
-  });
-}
-</script>
+        function check() {
+          const canvas = container.querySelector('canvas');
+          const image = container.querySelector('img');
 
+          if (canvas || image) {
+            resolve({ canvas, image });
+            return;
+          }
+
+          if (Date.now() >= deadline) {
+            reject(new Error('QR code generation timed out.'));
+            return;
+          }
+
+          window.requestAnimationFrame(check);
+        }
+
+        check();
+      });
+    }
+
+    async function addQrCodeToPdf(doc, qrData) {
+      const container = document.createElement('div');
+      container.setAttribute('aria-hidden', 'true');
+      container.style.position = 'fixed';
+      container.style.left = '-10000px';
+      container.style.top = '0';
+      document.body.appendChild(container);
+
+      try {
+        if (typeof QRCode !== 'function') {
+          throw new Error('QR code library is unavailable.');
+        }
+
+        new QRCode(container, {
+          text: qrData,
+          width: 200,
+          height: 200,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        const { canvas, image } = await waitForQrCode(container);
+
+        if (canvas) {
+          doc.addImage(canvas.toDataURL('image/png'), 'PNG', 140, 40, 40, 40);
+          return;
+        }
+
+        if (image) {
+          if (!image.complete) {
+            await new Promise((resolve, reject) => {
+              image.onload = resolve;
+              image.onerror = () => reject(new Error('QR image failed to load.'));
+            });
+          }
+          doc.addImage(image.src, 'PNG', 140, 40, 40, 40);
+          return;
+        }
+
+        throw new Error('QR code was not generated.');
+      } finally {
+        container.remove();
+      }
+    }
+
+    async function saveRegistration(data) {
+      const response = await fetch(CONFIG.SHEET_WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Registration server returned HTTP ${response.status}.`);
+      }
+
+      return response;
+    }
+
+    async function generateTicket(event) {
+      event.preventDefault();
+
+      if (!form.reportValidity()) {
+        setStatus('Please correct the highlighted fields.', 'error');
+        return;
+      }
+
+      if (!selectedCategory) {
+        setStatus('Please select a registration category.', 'error');
+        return;
+      }
+
+      if (!paymentInitiated) {
+        setStatus('Please use the Pay via UPI button before entering the UTR.', 'error');
+        return;
+      }
+
+      if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') {
+        setStatus('The PDF library is unavailable. Check your internet connection and try again.', 'error');
+        return;
+      }
+
+      const { name, mobile, email, utr } = getFormValues();
+      const ticketId = `PE-${Date.now()}`;
+      const data = {
+        ticketId,
+        name,
+        mobile,
+        email,
+        category: selectedCategory.name,
+        amount: selectedCategory.amount,
+        utr,
+        paymentStatus: 'PENDING_VERIFICATION',
+        createdAt: new Date().toISOString()
+      };
+
+      submitButton.disabled = true;
+      payButton.disabled = true;
+      setStatus('Generating your ticket and saving the registration...', 'info');
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text('Placement Empire - Registration Ticket', 20, 20);
+        doc.setFontSize(12);
+        doc.text(`Ticket ID: ${ticketId}`, 20, 40);
+        doc.text(`Name: ${name}`, 20, 50);
+        doc.text(`Mobile: ${mobile}`, 20, 60);
+        doc.text(`Email: ${email}`, 20, 70);
+        doc.text(`Category: ${selectedCategory.name}`, 20, 80);
+        doc.text(`Amount Paid: INR ${selectedCategory.amount}`, 20, 90);
+        doc.text(`UTR Number: ${utr}`, 20, 100);
+        doc.text('Payment Status: Pending Verification', 20, 110);
+
+        await addQrCodeToPdf(doc, `Ticket:${ticketId}|UTR:${utr}`);
+
+        doc.text(CONFIG.COMPANY_NAME, 20, 125);
+        doc.text(`Contact: ${CONFIG.CONTACT_PHONE}`, 20, 135);
+        doc.text(`Email: ${CONFIG.CONTACT_EMAIL}`, 20, 145);
+        doc.save(`${ticketId}.pdf`);
+
+        await saveRegistration(data);
+        setStatus('Ticket downloaded. Payment remains pending until the UTR is verified.', 'success');
+      } catch (error) {
+        console.error('Registration failed:', error);
+        setStatus('Registration could not be completed. Please try again or contact support.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        payButton.disabled = !selectedCategory;
+      }
+    }
+
+    categorySelect.addEventListener('change', updateCategory);
+    payButton.addEventListener('click', redirectToUPI);
+    form.addEventListener('submit', generateTicket);
+  </script>
 </body>
 </html>
+
+<!--
+IMPORTANT SERVER-SIDE REQUIREMENTS:
+1. Do not trust amount, category, ticketId, or paymentStatus from the browser.
+2. Recalculate the amount from a server-side category-price map.
+3. Validate and sanitize every submitted field.
+4. Verify the payment with a payment provider API/webhook or mark it pending for manual review.
+5. Restrict duplicate UTR submissions and protect the endpoint against abuse.
+--> 
+ر
