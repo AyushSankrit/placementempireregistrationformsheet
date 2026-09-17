@@ -139,6 +139,11 @@
       font-size: 0.875rem;
     }
 
+    .qr-wrapper { margin: 14px 0 4px; text-align: center; }
+
+    #paymentQr { display: inline-flex; min-width: 220px; min-height: 220px; align-items: center; justify-content: center; padding: 10px; background: #fff; border: 1px solid #bfdbfe; border-radius: 8px; }
+
+    #paymentQr canvas, #paymentQr img { display: block; width: 200px; height: 200px; }
     #status {
       min-height: 1.4em;
       margin-top: 16px;
@@ -222,6 +227,7 @@
         UPI ID: <span id="upiId" class="upi-id">placementempire@slc</span>
         <br />
         <button type="button" id="copyUpiBtn" class="copy-button">Copy UPI ID</button>
+        <div class="qr-wrapper"><strong>Scan to Pay</strong><div id="paymentQr" aria-label="UPI payment QR code"></div></div>
         <br />
         After completing payment, enter the UTR/reference number below.
       </div>
@@ -256,7 +262,7 @@
       PROJECT_NAME: 'Placement Empire Registration',
       CONTACT_PHONE: '7079887439',
       CONTACT_EMAIL: 'info@placementempire.com',
-      UPI_ID: 'tmps5482719104160405@slc',
+      UPI_ID: 'placementempire@slc',
       PAYEE_NAME: 'Placement Empire',
       SHEET_WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxWeTlMXXelwLeaBFjQJUwrO-dHY6MzjzZy6tvbcLYvIF9sogeqgoE1k9rPbgkQpEU10g/exec'
     });
@@ -285,6 +291,7 @@
     const paymentAmount = document.getElementById('paymentAmount');
     const copyUpiButton = document.getElementById('copyUpiBtn');
     const UPI_ID = 'placementempire@slc';
+    const paymentQr = document.getElementById('paymentQr');
 
     function setStatus(message, type = 'info') {
       statusElement.textContent = message;
@@ -320,7 +327,34 @@
       paymentAmount.textContent = selectedCategory.amount;
       paymentBox.classList.add('visible');
       paymentInitiated = true;
+      generatePaymentQr();
       setStatus(`Pay ₹${selectedCategory.amount} to ${UPI_ID}, then enter the UTR below.`, 'info');
+    }
+
+    function generatePaymentQr() {
+      if (!selectedCategory) return;
+
+      paymentQr.replaceChildren();
+
+      if (typeof QRCode !== 'function') {
+        paymentQr.textContent = 'QR code unavailable. Please use the UPI ID above.';
+        return;
+      }
+
+      const payload = new URLSearchParams({
+        pa: UPI_ID,
+        pn: 'Placement Empire',
+        am: String(selectedCategory.amount),
+        cu: 'INR',
+        tn: 'Placement Empire Registration'
+      });
+
+      new QRCode(paymentQr, {
+        text: `upi://pay?${payload.toString()}`,
+        width: 200,
+        height: 200,
+        correctLevel: QRCode.CorrectLevel.M
+      });
     }
 
     async function copyUpiId() {
