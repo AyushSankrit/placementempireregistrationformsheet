@@ -107,6 +107,38 @@
     button.secondary { background: #1d4ed8; }
     button:disabled { background: #94a3b8; cursor: not-allowed; }
 
+    .payment-box {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      line-height: 1.5;
+    }
+
+    .payment-box.visible { display: block; }
+
+    .upi-id {
+      display: inline-block;
+      margin: 6px 0;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #dbeafe;
+      color: #172554;
+      font-weight: bold;
+      user-select: all;
+    }
+
+    .copy-button {
+      width: auto;
+      margin: 4px 0 0;
+      padding: 8px 12px;
+      background: #2563eb;
+      font-size: 0.875rem;
+    }
+
     #status {
       min-height: 1.4em;
       margin-top: 16px;
@@ -125,7 +157,8 @@
     <p class="brand">Powered by Placement Empire</p>
 
     <p class="notice">
-      Payment is manually reviewed.
+      Payment is manually reviewed. A generated ticket is not proof of payment until the UTR is verified.
+    </p>
 
     <form id="regForm" novalidate>
       <label for="name">Full Name</label>
@@ -166,7 +199,7 @@
       <label for="category">Registration Category</label>
       <select id="category" name="category" required>
         <option value="">Select Category</option>
-        <option value="office-jobs">Office Jobs @ ₹1500</option>
+        <option value="tech-jobs">Tech Jobs @ ₹1500</option>
         <option value="skilled-jobs">Skilled Jobs @ ₹1000</option>
         <option value="unskilled-jobs">Unskilled Jobs @ ₹500</option>
         <option value="btech-jobs">B.Tech Jobs @ ₹5000</option>
@@ -176,8 +209,22 @@
       </select>
 
       <button type="button" id="payBtn" class="secondary" disabled>
-        Pay via UPI
+        Show Payment Details
       </button>
+
+      <div id="paymentBox" class="payment-box" aria-live="polite">
+        <strong>Manual UPI Payment</strong>
+        <br />
+        Pay the exact amount shown below using any UPI application.
+        <br />
+        Amount: <strong>₹<span id="paymentAmount">0</span></strong>
+        <br />
+        UPI ID: <span id="upiId" class="upi-id">placementempire@slc</span>
+        <br />
+        <button type="button" id="copyUpiBtn" class="copy-button">Copy UPI ID</button>
+        <br />
+        After completing payment, enter the UTR/reference number below.
+      </div>
 
       <label for="utr">UPI UTR / Reference Number</label>
       <input
@@ -209,15 +256,15 @@
       PROJECT_NAME: 'Placement Empire Registration',
       CONTACT_PHONE: '7079887439',
       CONTACT_EMAIL: 'info@placementempire.com',
-      UPI_ID: 'placementempire@slc',
+      UPI_ID: 'tmps5482719104160405@slc',
       PAYEE_NAME: 'Placement Empire',
-      SHEET_WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbwag8Id2p_E-OHRl6CmQPoEW04dp-D7g7BnVv-Fma_v5x3OJLGFxVoA6Zbv5qfIXwvxpQ/exec'
+      SHEET_WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxWeTlMXXelwLeaBFjQJUwrO-dHY6MzjzZy6tvbcLYvIF9sogeqgoE1k9rPbgkQpEU10g/exec'
     });
 
     // This map improves consistency in the browser, but it is not a security boundary.
     // The server must independently calculate the amount from the category.
     const CATEGORIES = Object.freeze({
-      'office-jobs': { name: 'Office Jobs', amount: 1500 },
+      'tech-jobs': { name: 'Tech Jobs', amount: 1500 },
       'skilled-jobs': { name: 'Skilled Jobs', amount: 1000 },
       'unskilled-jobs': { name: 'Unskilled Jobs', amount: 500 },
       'btech-jobs': { name: 'B.Tech Jobs', amount: 5000 },
@@ -234,6 +281,10 @@
     const payButton = document.getElementById('payBtn');
     const submitButton = document.getElementById('submitBtn');
     const statusElement = document.getElementById('status');
+    const paymentBox = document.getElementById('paymentBox');
+    const paymentAmount = document.getElementById('paymentAmount');
+    const copyUpiButton = document.getElementById('copyUpiBtn');
+    const UPI_ID = 'placementempire@slc';
 
     function setStatus(message, type = 'info') {
       statusElement.textContent = message;
@@ -247,32 +298,41 @@
 
       if (!selectedCategory) {
         payButton.disabled = true;
-        payButton.textContent = 'Pay via UPI';
+        payButton.textContent = 'Show Payment Details';
+        paymentBox.classList.remove('visible');
+        paymentAmount.textContent = '0';
         return;
       }
 
       payButton.disabled = false;
-      payButton.textContent = `Pay ₹${selectedCategory.amount} via UPI`;
-      setStatus('Select Pay via UPI, complete the payment, and then enter the UTR.', 'info');
+      payButton.textContent = `Show Payment Details - ₹${selectedCategory.amount}`;
+      paymentAmount.textContent = selectedCategory.amount;
+      paymentBox.classList.remove('visible');
+      setStatus('Click Show Payment Details to view the UPI ID and amount.', 'info');
     }
 
-    function redirectToUPI() {
+    function showPaymentDetails() {
       if (!selectedCategory) {
         setStatus('Please select a registration category first.', 'error');
         return;
       }
 
-      const params = new URLSearchParams({
-        pa: CONFIG.UPI_ID,
-        pn: CONFIG.PAYEE_NAME,
-        am: String(selectedCategory.amount),
-        cu: 'INR',
-        tn: CONFIG.PROJECT_NAME
-      });
-
+      paymentAmount.textContent = selectedCategory.amount;
+      paymentBox.classList.add('visible');
       paymentInitiated = true;
-      setStatus('Opening your UPI application. Return here after payment and enter the UTR.', 'info');
-      window.location.assign(`upi://pay?${params.toString()}`);
+      setStatus(`Pay ₹${selectedCategory.amount} to ${UPI_ID}, then enter the UTR below.`, 'info');
+    }
+
+    async function copyUpiId() {
+      try {
+        await navigator.clipboard.writeText(UPI_ID);
+        copyUpiButton.textContent = 'UPI ID Copied';
+        setTimeout(() => {
+          copyUpiButton.textContent = 'Copy UPI ID';
+        }, 2000);
+      } catch (error) {
+        setStatus(`Copy failed. Please manually copy: ${UPI_ID}`, 'error');
+      }
     }
 
     function getFormValues() {
@@ -354,16 +414,15 @@
     }
 
     async function saveRegistration(data) {
-      const response = await fetch(CONFIG.SHEET_WEB_APP_URL, {
+      // Google Apps Script may return an opaque cross-origin response.
+      // The request is sent, but the browser cannot reliably inspect its body.
+      await fetch(CONFIG.SHEET_WEB_APP_URL, {
         method: 'POST',
+        mode: 'no-cors',
         body: JSON.stringify(data)
       });
 
-      if (!response.ok) {
-        throw new Error(`Registration server returned HTTP ${response.status}.`);
-      }
-
-      return response;
+      return true;
     }
 
     async function generateTicket(event) {
@@ -438,11 +497,13 @@
       } finally {
         submitButton.disabled = false;
         payButton.disabled = !selectedCategory;
+        paymentBox.classList.toggle('visible', Boolean(selectedCategory && paymentInitiated));
       }
     }
 
     categorySelect.addEventListener('change', updateCategory);
-    payButton.addEventListener('click', redirectToUPI);
+    payButton.addEventListener('click', showPaymentDetails);
+    copyUpiButton.addEventListener('click', copyUpiId);
     form.addEventListener('submit', generateTicket);
   </script>
 </body>
